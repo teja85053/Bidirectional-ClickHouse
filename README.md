@@ -178,10 +178,6 @@ Contributions are welcome! Please:
 2. Create a feature branch
 3. Submit a Pull Request with clear changes
 
-## License
-
-This project is licensed under the MIT License.
-
 ## Acknowledgments
 
 
