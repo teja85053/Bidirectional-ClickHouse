@@ -1,0 +1,77 @@
+# Prompt for ClickHouse & Flat File Ingestion Tool Development
+
+I need to build a web-based application that enables bidirectional data transfer between ClickHouse databases and flat files (CSV). The application should meet these requirements:
+
+## Core Requirements
+1. Create a web application with both frontend UI and backend logic
+2. Support bidirectional data flow:
+   - ClickHouse to Flat File
+   - Flat File to ClickHouse
+3. Provide a user interface that allows:
+   - Source selection (ClickHouse or Flat File)
+   - Connection configuration for ClickHouse (Host, Port, Database, User, JWT Token)
+   - Configuration for Flat Files (filename, delimiters)
+   - Schema discovery and column selection
+   - Ingestion process control
+   - Completion reporting (total records processed)
+   - Error handling and display
+
+## Technical Stack Guidance
+- Backend: Python with Flask
+- Frontend: HTML/CSS/JavaScript (potentially with a framework like React/Vue)
+- ClickHouse connection: Use an official client library
+- JWT token handling for ClickHouse authentication
+- CSV parsing and handling for flat files
+
+## Implementation Steps
+
+### Step 1: Project Structure
+Help me set up a basic project structure with directories for backend, frontend, and necessary configuration files.
+
+### Step 2: Backend Development
+1. Create a Flask application with basic API routes
+2. Implement a ClickHouse client module that can:
+   - Connect with JWT authentication
+   - Fetch table schemas
+   - Execute queries for data export/import
+3. Develop a file handler module for:
+   - CSV parsing and validation
+   - File saving and loading
+4. Build an ingestion system that can:
+   - Transfer data between sources efficiently
+   - Count records processed
+   - Report progress
+   - Handle errors gracefully
+
+### Step 3: Frontend Development
+1. Design a clean, intuitive UI with:
+   - Source/target selection
+   - Connection parameter inputs
+   - Table/file selection
+   - Column selection interface
+   - Action buttons (Connect, Load Columns, Preview, Start Ingestion)
+   - Status display
+   - Results display
+2. Implement JavaScript for:
+   - Form handling
+   - AJAX requests to backend API
+   - Dynamic UI updates
+   - Progress monitoring via WebSockets
+
+### Step 4: Advanced Features
+1. Data preview functionality
+2. Progress bar implementation
+
+### Step 5: Testing
+1. Set up test cases with example datasets
+2. Verify bidirectional transfers
+3. Test error handling scenarios
+
+For each step, I'll need specific code implementations and guidance on best practices to ensure security, performance, and usability.
+
+## Questions to Consider
+1. What's the most efficient way to handle large data transfers?
+2. How should we structure the API endpoints?
+3. What's the best approach for column selection in the UI?
+4. How can we implement real-time progress updates?
+5. What security measures should we implement beyond JWT handling?
