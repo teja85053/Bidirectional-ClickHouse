@@ -3,10 +3,36 @@ from clickhouse_client import ClickHouseClient
 from file_handler import FileHandler
 from ingestion import ingest_clickhouse_to_file, ingest_file_to_clickhouse
 from flask_cors import CORS
+from flask_socketio import SocketIO
 import os
+import threading
+import eventlet
 
 app = Flask(__name__)
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Global variable to track progress
+progress_data = {
+    "current": 0,
+    "total": 0,
+    "status": "idle"
+}
+
+def reset_progress():
+    global progress_data
+    progress_data = {
+        "current": 0,
+        "total": 0,
+        "status": "idle"
+    }
+
+def update_progress(current, total, status="processing"):
+    global progress_data
+    progress_data["current"] = current
+    progress_data["total"] = total
+    progress_data["status"] = status
+    socketio.emit('progress_update', progress_data)
 
 # Serve frontend files
 @app.route('/')
@@ -70,15 +96,32 @@ def preview_data():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
+# Function to handle ingestion in a separate thread with progress reporting
+def run_ingestion(data):
+    try:
+        reset_progress()
+        update_progress(0, 100, "preparing")
+        
+        if data['direction'] == 'clickhouse_to_file':
+            count = ingest_clickhouse_to_file(data, update_progress)
+        else:
+            count = ingest_file_to_clickhouse(data, update_progress)
+        
+        # Final update showing completion
+        update_progress(100, 100, "completed")
+        socketio.emit('ingestion_complete', {"status": "success", "count": count})
+    except Exception as e:
+        app.logger.error(f"Ingestion error: {str(e)}")
+        update_progress(0, 100, "error")
+        socketio.emit('ingestion_error', {"status": "error", "message": str(e)})
+
 @app.route('/ingest', methods=['POST'])
 def ingest():
     data = request.json
     try:
-        if data['direction'] == 'clickhouse_to_file':
-            count = ingest_clickhouse_to_file(data)
-        else:
-            count = ingest_file_to_clickhouse(data)
-        return jsonify({"status": "success", "count": count})
+        # Start ingestion in a separate thread
+        threading.Thread(target=run_ingestion, args=(data,)).start()
+        return jsonify({"status": "started"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
@@ -90,7 +133,17 @@ def download_file(filename):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
+@socketio.on('connect')
+def handle_connect():
+    app.logger.info('Client connected to WebSocket')
+    # Send current progress state on connection
+    socketio.emit('progress_update', progress_data)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    app.logger.info('Client disconnected from WebSocket')
+
 if __name__ == '__main__':
     # Ensure data directory exists
     os.makedirs('data', exist_ok=True)
-    app.run(debug=True)
+    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)

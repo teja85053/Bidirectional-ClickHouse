@@ -1,4 +1,3 @@
-# Modified version of clickhouse_client.py to handle both JWT and password auth
 from clickhouse_driver import Client
 import re
 
@@ -36,7 +35,6 @@ class ClickHouseClient:
         except Exception as e:
             raise ConnectionError(f"Failed to connect to ClickHouse: {str(e)}")
 
-    # Rest of the class remains the same
     def get_tables(self):
         """
         Get list of tables in the current database
@@ -67,6 +65,26 @@ class ClickHouseClient:
             return [row[0] for row in self.client.execute(f"DESCRIBE TABLE {table}")]
         except Exception as e:
             raise Exception(f"Failed to get columns for table '{table}': {str(e)}")
+
+    def count_rows(self, table):
+        """
+        Count the number of rows in a table
+        
+        Args:
+            table (str): Table name
+            
+        Returns:
+            int: Number of rows in the table
+        """
+        # Sanitize table name to prevent SQL injection
+        if not re.match(r'^[a-zA-Z0-9_]+$', table):
+            raise ValueError("Invalid table name. Only alphanumeric characters and underscores are allowed.")
+            
+        try:
+            result = self.client.execute(f"SELECT count() FROM {table}")
+            return result[0][0]
+        except Exception as e:
+            raise Exception(f"Failed to count rows in table '{table}': {str(e)}")
 
     def fetch_data(self, table, columns):
         """

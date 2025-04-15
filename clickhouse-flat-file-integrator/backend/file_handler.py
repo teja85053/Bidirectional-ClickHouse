@@ -29,27 +29,42 @@ class FileHandler:
         except Exception as e:
             raise Exception(f"Error reading file: {str(e)}")
 
-    def read_data(self, selected_columns):
+    def read_data(self, selected_columns, progress_callback=None):
         """
         Read data from the CSV file for selected columns
         
         Args:
             selected_columns (list): List of column names to read
+            progress_callback (function): Callback function to report progress
             
         Returns:
             list: List of rows with data for selected columns
         """
         try:
+            # First pass to count rows for progress reporting
+            with open(self.filepath, newline='', encoding='utf-8') as f:
+                row_count = sum(1 for _ in f) - 1  # Subtract header row
+            
+            if progress_callback:
+                progress_callback(15, 100, "counting_rows")
+            
             with open(self.filepath, newline='', encoding='utf-8') as f:
                 reader = csv.DictReader(f, delimiter=self.delimiter)
                 data = []
+                rows_processed = 0
+                
                 for row in reader:
                     try:
                         data.append([row[col] for col in selected_columns])
-                    except KeyError as e:
-                        # Skip rows with missing columns or continue with None values
-                        # data.append([row.get(col, None) for col in selected_columns])
+                    except KeyError:
+                        # Skip rows with missing columns
                         continue
+                    
+                    rows_processed += 1
+                    if progress_callback and row_count > 0 and rows_processed % (max(1, row_count // 100)) == 0:
+                        progress_pct = min(59, 15 + (rows_processed / row_count) * 45)
+                        progress_callback(int(progress_pct), 100, "reading_data")
+                
                 return data
         except FileNotFoundError:
             raise FileNotFoundError(f"File not found: {self.filepath}")
