@@ -186,3 +186,7 @@ Contributions are welcome! Please:
 - [Socket.IO](https://socket.io/) — Real-time communication library used for progress updates
 - [ClickHouse Example Datasets](https://clickhouse.com/docs/en/getting-started/example-datasets) — Sample dataset (`uk_price_paid`, `ontime`) used for testing
 - [Docker](https://www.docker.com/) — Used for containerizing and running the ClickHouse server
+
+
+# Execution Video
+[Watch the video](assgn.mp4)
